@@ -1,25 +1,96 @@
-let usuario = document.getElementById("usuario");
-let mensaje = document.getElementById("mensaje");
+const form = document.getElementById("inicio");
+const usuario = document.getElementById("usuario");
+const password = document.getElementById("password");
+const mostrar = document.getElementById("mostrar");
+const contador = document.getElementById("contador");
+const fuerza = document.getElementById("fuerza");
+const mensajeLogin = document.getElementById("mensajeLogin");
+const botonEnviar = document.getElementById("enviar");
 
-usuario.addEventListener("input", function () {
+let intentos = 0;
+let bloqueado = false;
 
-    let valor = this.value;
+form.addEventListener("submit", function(e) {
+    e.preventDefault();
 
-    if (/[^a-zA-Z]/.test(valor)) {
-        this.style.border = "2px solid red";
-        mensaje.textContent = "Usuario incorrecto";
-        mensaje.style.color = "red";
-    } 
-    else if (valor === "") {
-        this.style.border = "2px solid red";
-        mensaje.textContent = "Campo obligatorio";
-        mensaje.style.color = "red";
-    } 
-    else {
-        this.style.border = "2px solid green";
-        mensaje.textContent = "Usuario válido";
-        mensaje.style.color = "green";
+    if (bloqueado) return;
+
+    const userValido = validarUsuario();
+    const passValido = validarPassword();
+
+    if (userValido && passValido) {
+        mensajeLogin.innerHTML = "<span class='text-success'>Login correcto (simulado)</span>";
+        intentos = 0;
+    } else {
+        intentos++;
+        mensajeLogin.innerHTML = "<span class='text-danger'>Datos incorrectos</span>";
+
+        if (intentos >= 3) {
+            bloquearFormulario();
+        }
+    }
+});
+function validarUsuario() {
+    const regex = /^[a-zA-Z0-9.-]{3,}$/;
+
+    if (!regex.test(usuario.value)) {
+        document.getElementById("mensajeUsuario").textContent =
+            "Mínimo 3 caracteres. Solo letras, números, puntos y guiones.";
+        return false;
     }
 
-    this.value = valor.replace(/[^a-zA-Z]/g, '');
+    document.getElementById("mensajeUsuario").textContent = "";
+    return true;
+}
+
+mostrar.addEventListener("click", function() {
+    if (password.type === "password") {
+        password.type = "text";
+        mostrar.textContent = "Ocultar";
+    } else {
+        password.type = "password";
+        mostrar.textContent = "Mostrar";
+    }
 });
+
+password.addEventListener("input", function() {
+    contador.textContent = password.value.length;
+    validarPassword();
+});
+
+function validarPassword() {
+    const valor = password.value;
+
+    const tieneNumero = /[0-9]/.test(valor);
+    const tieneEspecial = /[!@#$%^&*]/.test(valor);
+    const tieneMayus = /[A-Z]/.test(valor);
+
+    if (valor.length >= 8 && tieneNumero && tieneEspecial && tieneMayus) {
+        fuerza.textContent = "Fortaleza: Fuerte";
+        fuerza.className = "text-success";
+        return true;
+    } else if (valor.length >= 6) {
+        fuerza.textContent = "Fortaleza: Media";
+        fuerza.className = "text-warning";
+        return false;
+    } else {
+        fuerza.textContent = "Fortaleza: Débil";
+        fuerza.className = "text-danger";
+        return false;
+    }
+}
+
+function bloquearFormulario() {
+    bloqueado = true;
+    botonEnviar.disabled = true;
+
+    mensajeLogin.innerHTML =
+        "<span class='text-danger'>Demasiados intentos. Espere 30 segundos.</span>";
+
+    setTimeout(() => {
+        bloqueado = false;
+        botonEnviar.disabled = false;
+        intentos = 0;
+        mensajeLogin.innerHTML = "";
+    }, 30000);
+}
